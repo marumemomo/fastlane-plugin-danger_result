@@ -5,11 +5,12 @@ module Fastlane
   module Actions
     class DangerResultAction < Action
       def self.run(params)
+        d = ''
         d = other_action.danger(
           use_bundle_exec: params[:use_bundle_exec],
           verbose: params[:verbose],
           danger_id: params[:danger_id],
-          dangerfile: params[:dangerfile],
+          dangerfile: '../' + (params[:dangerfile] || 'Dangerfile'),
           github_api_token: params[:github_api_token],
           fail_on_errors: params[:fail_on_errors],
           new_comment: params[:new_comment],
