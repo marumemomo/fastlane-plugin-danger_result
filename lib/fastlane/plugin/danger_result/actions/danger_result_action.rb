@@ -5,19 +5,30 @@ module Fastlane
   module Actions
     class DangerResultAction < Action
       def self.run(params)
-        d = ''
-        d = other_action.danger(
-          use_bundle_exec: params[:use_bundle_exec],
-          verbose: params[:verbose],
-          danger_id: params[:danger_id],
-          dangerfile: '../' + (params[:dangerfile] || 'Dangerfile'),
-          github_api_token: params[:github_api_token],
-          fail_on_errors: params[:fail_on_errors],
-          new_comment: params[:new_comment],
-          base: params[:base],
-          head: params[:head],
-          pr: params[:pr]
-        )
+        Actions.verify_gem!('danger')
+        cmd = []
+
+        cmd << 'bundle exec' if params[:use_bundle_exec] && shell_out_should_use_bundle_exec?
+        cmd << 'danger'
+        cmd << '--verbose' if params[:verbose]
+
+        danger_id = params[:danger_id]
+        dangerfile = params[:dangerfile]
+        base = params[:base]
+        head = params[:head]
+        pr = params[:pr]
+        cmd << "--danger_id=#{danger_id}" if danger_id
+        cmd << "--dangerfile=#{dangerfile}" if dangerfile
+        cmd << "--fail-on-errors=true" if params[:fail_on_errors]
+        cmd << "--new-comment" if params[:new_comment]
+        cmd << "--base=#{base}" if base
+        cmd << "--head=#{head}" if head
+        cmd << "pr #{pr}" if pr
+
+        ENV['DANGER_GITHUB_API_TOKEN'] = params[:github_api_token] if params[:github_api_token]
+
+        d = Actions.sh(cmd.join(' '))
+
         d.gsub!(/(\e\[31m|\e\[32m|\e\[33m|\e\[0m|\n)/, '')
         res = d.split('Results:')[1]
         result = {
