@@ -41,7 +41,29 @@ module Fastlane
         if /Warnings:/ =~ res
           result[:warnings] = res.split("Warnings:")[1].sub(/- \[ \] /, '').split('- [ ] ')
         end
-        result
+
+        fields = []
+        color = 'good'
+        text = 'LGTM :+1:'
+        if result[:warnings].size != 0
+          fields.push({"title": "Warning", "value": "```\n#{result[:warnings].join("\n")}\n```", "short": false})
+          color = 'warning'
+          text = ''
+        end
+        if result[:errors].size != 0
+          fields.push({"title": "Error", "value": "```\n#{result[:errors].join("\n")}\n```", "short": false})
+          color = 'danger'
+          text = ''
+        end
+        other_action.slack(
+          default_payloads: [],
+          attachment_properties: {
+            title: 'Review from Danger',
+            color: color,
+            text: text,
+            fields: fields
+          }
+        )
       end
 
       def self.description
